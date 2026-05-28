@@ -12,6 +12,7 @@ export async function initBot() {
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.MessageContent,
       GatewayIntentBits.DirectMessages,
+      GatewayIntentBits.DirectMessageReactions,
     ],
   })
 
