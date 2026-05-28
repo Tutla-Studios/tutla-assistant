@@ -6,12 +6,14 @@ import {
   InteractionContextType,
 } from 'discord.js'
 import * as ping from './simple/ping'
+import * as help from './simple/help'
 import * as tools from './simple/tools/'
 export type { Command } from './types'
 import { CommandScope, type Command } from './types'
 
 export const commands = new Collection<string, Command>([
   [ping.data.name, ping],
+  [help.data.name, help],
   ...tools.commands
 ])
 

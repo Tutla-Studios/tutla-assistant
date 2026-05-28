@@ -1,5 +1,6 @@
 import { type Interaction } from 'discord.js'
 import { commands } from '../commands'
+import { commandCheck } from '../utils/checks'
 
 export async function execute(interaction: Interaction) {
   if (!interaction.isChatInputCommand()) return
@@ -8,6 +9,7 @@ export async function execute(interaction: Interaction) {
   if (!command) return
 
   try {
+    if (command.premium && !(await commandCheck(interaction))) return
     await command.execute(interaction)
   } catch (err) {
     console.error(`Error executing command /${interaction.commandName}:`, err)

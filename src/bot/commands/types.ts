@@ -14,5 +14,7 @@ export enum CommandScope {
 export interface Command {
   data: { name: string; toJSON(): unknown }
   scope: CommandScope
+  /** Mark true to restrict this command to premium users only (shows 🔮 in /help). */
+  premium?: boolean
   execute(interaction: ChatInputCommandInteraction): Promise<void>
 }
