@@ -4,7 +4,7 @@ import {
 } from 'discord.js'
 import { CommandScope } from '@/bot/commands/types'
 
-export const scope = CommandScope.All
+export const scope = CommandScope.User
 
 export const data = new SlashCommandBuilder()
   .setName('8ball')
