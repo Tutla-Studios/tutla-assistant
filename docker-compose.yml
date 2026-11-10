@@ -10,6 +10,24 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tutla -d tutla_assistant"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Inside the compose network the DB is reachable as "postgres" (overrides .env's localhost:5433).
+      DATABASE_URL: postgresql://tutla:tutla@postgres:5432/tutla_assistant?schema=public
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:

@@ -5,6 +5,7 @@ import { getAccount } from '@/bot/utils/economy'
 import { randInt } from '@/bot/utils/http'
 
 export const scope = CommandScope.All
+export const cooldown = 60
 
 export const data = new SlashCommandBuilder()
   .setName('daily')

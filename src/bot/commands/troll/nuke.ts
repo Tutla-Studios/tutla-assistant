@@ -2,6 +2,7 @@ import { SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.j
 import { CommandScope } from '@/bot/commands/types'
 
 export const scope = CommandScope.All
+export const skipChecks = true
 
 export const data = new SlashCommandBuilder()
   .setName('nuke')

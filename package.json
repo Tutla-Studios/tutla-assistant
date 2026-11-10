@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f app",
+    "db:migrate": "docker compose run --rm --no-TTY --user \"$(id -u):$(id -g)\" -e HOME=/tmp -v ./prisma:/app/prisma app npx prisma migrate dev"
   },
   "dependencies": {
     "@discordjs/voice": "^0.19.2",

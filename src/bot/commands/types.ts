@@ -18,5 +18,9 @@ export interface Command {
   premium?: boolean
   /** Subcommand names restricted to premium users (for grouped commands like /photoshop). */
   premiumSubcommands?: readonly string[]
+  /** Skip the per-command checks (bot ban, ToS prompt, +1 XP) — for commands that had no check in the Python bot. */
+  skipChecks?: boolean
+  /** Per-user cooldown in seconds. */
+  cooldown?: number
   execute(interaction: ChatInputCommandInteraction): Promise<void>
 }

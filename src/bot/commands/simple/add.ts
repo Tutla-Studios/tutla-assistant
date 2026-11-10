@@ -3,6 +3,7 @@ import { CommandScope } from '@/bot/commands/types'
 import { buildAddBotRow } from './help'
 
 export const scope = CommandScope.All
+export const skipChecks = true
 
 export const data = new SlashCommandBuilder()
   .setName('add')

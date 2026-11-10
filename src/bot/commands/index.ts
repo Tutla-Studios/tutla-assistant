@@ -17,6 +17,7 @@ import * as info from './info/'
 import * as socialmedia from './socialmedia/'
 import * as troll from './troll/'
 import * as advanced from './advanced/'
+import * as client from './client/'
 export type { Command } from './types'
 import { CommandScope, type Command } from './types'
 
@@ -33,6 +34,7 @@ export const commands = new Collection<string, Command>([
   ...socialmedia.commands,
   ...troll.commands,
   ...advanced.commands,
+  ...client.commands,
 ])
 
 function toBody(c: Command): object {

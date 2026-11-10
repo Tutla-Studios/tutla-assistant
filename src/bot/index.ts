@@ -1,11 +1,13 @@
 import { Client, Events, GatewayIntentBits } from 'discord.js'
 import { setDiscordClient } from '@/lib/bot'
 import { deployCommands } from './commands'
+import { installLogCapture } from './utils/logs'
 import { execute as onReady } from './events/ready'
 import { execute as onMessageCreate } from './events/messageCreate'
 import { execute as onInteractionCreate } from './events/interactionCreate'
 
 export async function initBot() {
+  installLogCapture()
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,

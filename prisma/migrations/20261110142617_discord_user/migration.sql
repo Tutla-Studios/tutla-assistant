@@ -11,4 +11,3 @@ CREATE TABLE "discord_user" (
 
     CONSTRAINT "discord_user_pkey" PRIMARY KEY ("id")
 );
-

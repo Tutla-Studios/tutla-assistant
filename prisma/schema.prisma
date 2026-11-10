@@ -79,8 +79,30 @@ model DiscordUser {
   lastDaily DateTime?
   premium   Boolean   @default(false)
   banned    Boolean   @default(false)
+  /// 0 user · 1 manage premium · 2 admin commands · 3 bot-ban users · 4 owner (logs, shell, edit)
+  adminLevel    Int       @default(0)
+  /// Set when the user accepts the Terms of Service prompt.
+  tosAcceptedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
   @@map("discord_user")
+}
+
+/// Channels subscribed to the Tutla feed (/subscribe).
+model FeedSubscription {
+  channelId String   @id
+  guildId   String?
+  createdAt DateTime @default(now())
+
+  @@map("feed_subscription")
+}
+
+/// Small persisted key/value settings for the bot (e.g. the question of the day).
+model BotSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("bot_setting")
 }
