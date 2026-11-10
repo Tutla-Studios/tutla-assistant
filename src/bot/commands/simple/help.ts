@@ -11,7 +11,7 @@ import {
   type StringSelectMenuInteraction,
 } from 'discord.js'
 import { CommandScope } from '@/bot/commands/types'
-import { commands } from '@/bot/commands'
+import { commands, type Command } from '@/bot/commands'
 
 export const scope = CommandScope.All
 
@@ -38,13 +38,24 @@ It offers tools, utility commands, and more — all accessible as a user-install
 interface RawOption {
   type: number
   name: string
+  description?: string
   required?: boolean
+  options?: RawOption[]
 }
+
+interface RawCommand {
+  name: string
+  description: string
+  options?: RawOption[]
+}
+
+const SUBCOMMAND = 1
+const SUBCOMMAND_GROUP = 2
 
 function commandify(name: string, description: string, options: RawOption[] = [], premium = false): string {
   let line = `**/${name}`
   for (const opt of options) {
-    if (opt.type <= 2) continue
+    if (opt.type <= SUBCOMMAND_GROUP) continue
     line += ` \`[${opt.required ? '' : 'Optional: '}${opt.name}]\``
   }
   if (premium) line += ' 🔮'
@@ -52,11 +63,30 @@ function commandify(name: string, description: string, options: RawOption[] = []
   return line
 }
 
+/** Render a command; grouped commands (/admin, /photoshop…) get a heading plus one line per subcommand. */
+function describeCommand(cmd: Command): string {
+  const json = cmd.data.toJSON() as RawCommand
+  const subs = (json.options ?? []).filter((o) => o.type === SUBCOMMAND || o.type === SUBCOMMAND_GROUP)
+  if (subs.length === 0) return commandify(json.name, json.description, json.options, cmd.premium)
+
+  const isPremium = (sub: string) => !!cmd.premium || !!cmd.premiumSubcommands?.includes(sub)
+  let out = `### ${json.name.toUpperCase()}\n`
+  for (const sub of subs) {
+    if (sub.type === SUBCOMMAND_GROUP) {
+      for (const s of sub.options ?? []) {
+        out += commandify(`${json.name} ${sub.name} ${s.name}`, s.description ?? '', s.options, isPremium(s.name))
+      }
+    } else {
+      out += commandify(`${json.name} ${sub.name}`, sub.description ?? '', sub.options, isPremium(sub.name))
+    }
+  }
+  return out
+}
+
 function buildPages(): EmbedBuilder[] {
   const pages: string[] = []
   for (const cmd of commands.values()) {
-    const json = cmd.data.toJSON() as { name: string; description: string; options?: RawOption[] }
-    const line = commandify(json.name, json.description, json.options, cmd.premium) + '\n'
+    const line = describeCommand(cmd) + '\n'
     if (pages.length === 0 || pages[pages.length - 1].length + line.length > 1500) {
       pages.push(line)
     } else {
@@ -105,7 +135,7 @@ function buildMenuRow() {
   return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)
 }
 
-function buildAddBotRow() {
+export function buildAddBotRow() {
   const clientId = process.env.DISCORD_CLIENT_ID ?? ''
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -165,8 +195,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       await interaction.reply({ content: `Command "${commandName}" not found.`, ephemeral: true })
       return
     }
-    const json = cmd.data.toJSON() as { name: string; description: string; options?: RawOption[] }
-    await interaction.reply({ content: commandify(json.name, json.description, json.options, cmd.premium), ephemeral: true })
+    await interaction.reply({ content: describeCommand(cmd), ephemeral: true })
     return
   }
 
@@ -203,12 +232,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     components: buildComponents(currentPage),
   })
 
-  const collector = interaction.channel?.createMessageComponentCollector({
+  const message = await interaction.fetchReply()
+  const collector = message.createMessageComponentCollector({
     filter: (i) => i.user.id === interaction.user.id,
     time: 180_000,
   })
 
-  collector?.on('collect', async (i) => {
+  collector.on('collect', async (i) => {
     if (i.componentType === ComponentType.Button) {
       if (i.customId === 'help_prev') currentPage = Math.max(0, currentPage - 1)
       if (i.customId === 'help_next') currentPage = Math.min(pages.length - 1, currentPage + 1)
@@ -224,7 +254,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
   })
 
-  collector?.on('end', async () => {
+  collector.on('end', async () => {
     await interaction.editReply({ components: [] }).catch(() => null)
   })
 }

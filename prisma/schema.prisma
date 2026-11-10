@@ -70,3 +70,17 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
+
+/// Bot-side profile for a Discord user (economy, premium, bans). Keyed by Discord user ID.
+model DiscordUser {
+  id        String    @id
+  coins     Int       @default(0)
+  xp        Int       @default(0)
+  lastDaily DateTime?
+  premium   Boolean   @default(false)
+  banned    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("discord_user")
+}

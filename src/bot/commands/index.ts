@@ -7,15 +7,60 @@ import {
 } from 'discord.js'
 import * as ping from './simple/ping'
 import * as help from './simple/help'
+import * as add from './simple/add'
 import * as tools from './simple/tools/'
+import * as ai from './ai/'
+import * as computing from './computing/'
+import * as economy from './economy/'
+import * as image from './image/'
+import * as info from './info/'
+import * as socialmedia from './socialmedia/'
+import * as troll from './troll/'
+import * as advanced from './advanced/'
 export type { Command } from './types'
 import { CommandScope, type Command } from './types'
 
 export const commands = new Collection<string, Command>([
   [ping.data.name, ping],
   [help.data.name, help],
-  ...tools.commands
+  [add.data.name, add],
+  ...tools.commands,
+  ...ai.commands,
+  ...computing.commands,
+  ...economy.commands,
+  ...image.commands,
+  ...info.commands,
+  ...socialmedia.commands,
+  ...troll.commands,
+  ...advanced.commands,
 ])
+
+function toBody(c: Command): object {
+  const json = c.data.toJSON() as object
+  switch (c.scope) {
+    case CommandScope.User:
+      return {
+        ...json,
+        integration_types: [ApplicationIntegrationType.UserInstall],
+        contexts: [InteractionContextType.BotDM, InteractionContextType.PrivateChannel],
+      }
+    case CommandScope.All:
+      return {
+        ...json,
+        integration_types: [
+          ApplicationIntegrationType.GuildInstall,
+          ApplicationIntegrationType.UserInstall,
+        ],
+        contexts: [
+          InteractionContextType.Guild,
+          InteractionContextType.BotDM,
+          InteractionContextType.PrivateChannel,
+        ],
+      }
+    default:
+      return json
+  }
+}
 
 export async function deployCommands() {
   const token = process.env.DISCORD_TOKEN
@@ -31,9 +76,7 @@ export async function deployCommands() {
   const all = [...commands.values()]
 
   const guildOnly = all.filter((c) => c.scope === CommandScope.Guild)
-  const global = all.filter((c) => c.scope === CommandScope.Global)
-  const userOnly = all.filter((c) => c.scope === CommandScope.User)
-  const everywhere = all.filter((c) => c.scope === CommandScope.All)
+  const applicationWide = all.filter((c) => c.scope !== CommandScope.Guild)
 
   // Guild-scoped: instant deploy to one guild
   if (guildOnly.length > 0) {
@@ -42,53 +85,16 @@ export async function deployCommands() {
     } else {
       await rest.put(
         Routes.applicationGuildCommands(clientId, guildId),
-        { body: guildOnly.map((c) => c.data.toJSON()) },
+        { body: guildOnly.map(toBody) },
       )
       console.log(`Deployed ${guildOnly.length} guild command(s) to ${guildId}`)
     }
   }
 
-  // Global: available in every guild the bot is in
-  if (global.length > 0) {
-    await rest.put(
-      Routes.applicationCommands(clientId),
-      { body: global.map((c) => c.data.toJSON()) },
-    )
-    console.log(`Deployed ${global.length} global command(s)`)
-  }
-
-  if (userOnly.length > 0) {
-    await rest.put(
-      Routes.applicationCommands(clientId),
-      {
-        body: userOnly.map((c) => ({
-          ...(c.data.toJSON() as object),
-          integration_types: [ApplicationIntegrationType.UserInstall],
-          contexts: [InteractionContextType.BotDM, InteractionContextType.PrivateChannel],
-        })),
-      },
-    )
-    console.log(`Deployed ${userOnly.length} user-install command(s)`)
-  }
-
-  if (everywhere.length > 0) {
-    await rest.put(
-      Routes.applicationCommands(clientId),
-      {
-        body: everywhere.map((c) => ({
-          ...(c.data.toJSON() as object),
-          integration_types: [
-            ApplicationIntegrationType.GuildInstall,
-            ApplicationIntegrationType.UserInstall,
-          ],
-          contexts: [
-            InteractionContextType.Guild,
-            InteractionContextType.BotDM,
-            InteractionContextType.PrivateChannel,
-          ],
-        })),
-      },
-    )
-    console.log(`Deployed ${everywhere.length} everywhere command(s)`)
+  // Global, user-install and everywhere commands share one route, and a PUT replaces
+  // the whole set — so they must be sent together in a single request.
+  if (applicationWide.length > 0) {
+    await rest.put(Routes.applicationCommands(clientId), { body: applicationWide.map(toBody) })
+    console.log(`Deployed ${applicationWide.length} application command(s)`)
   }
 }

@@ -16,5 +16,7 @@ export interface Command {
   scope: CommandScope
   /** Mark true to restrict this command to premium users only (shows 🔮 in /help). */
   premium?: boolean
+  /** Subcommand names restricted to premium users (for grouped commands like /photoshop). */
+  premiumSubcommands?: readonly string[]
   execute(interaction: ChatInputCommandInteraction): Promise<void>
 }

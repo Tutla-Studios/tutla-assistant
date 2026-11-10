@@ -1,12 +1,10 @@
 import type { ChatInputCommandInteraction } from 'discord.js'
+import { prisma } from '@/lib/prisma'
 
-/**
- * Returns true if the user has premium access.
- * Replace this stub with real logic (e.g. a Prisma DB lookup) when ready.
- */
+/** Returns true if the user has premium access (DiscordUser.premium). */
 export async function isPremium(userId: string): Promise<boolean> {
-  void userId
-  return false
+  const user = await prisma.discordUser.findUnique({ where: { id: userId }, select: { premium: true } })
+  return user?.premium ?? false
 }
 
 /**
